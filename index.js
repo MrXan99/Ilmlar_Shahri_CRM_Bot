@@ -13,7 +13,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // === КОНФИГУРАЦИЯ ===
 const CONFIG = {
   // URL твоего опубликованного Apps Script
-  GOOGLE_SHEETS_API: 'https://script.google.com/macros/s/ABC123/exec', // ← Замени!
+  GOOGLE_SHEETS_API: 'https://script.google.com/macros/s/AKfycbx-y37OLu71QFtoLUT_2IKQncwqr39DVkd6cFM4394OHTZzH2QTTLyNDgDmuRYDCqO2/exec', // ← Замени!
 };
 
 // Хранилище данных
