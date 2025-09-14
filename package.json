@@ -6,7 +6,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "telegraf": "4.17.1",
+    "telegraf": "telegraf/telegraf",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5"
   }
