@@ -14,7 +14,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // КОНФИГУРАЦИЯ
 const CONFIG = {
   // 🔗 Замени на свой URL от опубликованного Apps Script
-  GOOGLE_SHEETS_API: 'https://script.google.com/macros/s/YOUR_DEPLOYED_ID/exec',
+  GOOGLE_SHEETS_API: 'https://script.google.com/macros/s/AKfycbx-y37OLu71QFtoLUT_2IKQncwqr39DVkd6cFM4394OHTZzH2QTTLyNDgDmuRYDCqO2/exec',
 
   // ⏰ Уведомления за 1 час
   NOTIFICATION_HOURS_BEFORE: 1,
