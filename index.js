@@ -40,27 +40,36 @@ function isOwner(chatId) {
 async function loadManagers() {
   try {
     const url = `${CONFIG.GOOGLE_SHEETS_API}?sheet=Managers`;
+    console.log('🔍 Запрос к Managers:', url);
+
     const response = await axios.get(url, {
       timeout: 10000,
       headers: { 'User-Agent': 'Node.js Bot' }
     });
 
-    if (Array.isArray(response.data)) {
-      MANAGERS_DATA = response.data.filter(m => m['ChatID']);
-      
-      // Обновляем список разрешённых ID
-      ADMIN_CHAT_IDS = new Set(
-        MANAGERS_DATA
-          .filter(m => ['admin', 'manager'].includes((m['Lavozimi'] || '').toLowerCase()))
-          .map(m => m['ChatID'].toString())
-          .filter(Boolean)
-      );
-
-      console.log(`✅ Загружено ${MANAGERS_DATA.length} администраторов`);
+    if (!response.data || !Array.isArray(response.data)) {
+      console.error('❌ Managers: данные не массив', response.data);
+      return;
     }
+
+    MANAGERS_DATA = response.data.filter(m => m['ChatID']);
+    
+    ADMIN_CHAT_IDS = new Set(
+      MANAGERS_DATA
+        .filter(m => ['admin', 'manager'].includes((m['Lavozimi'] || '').toLowerCase()))
+        .map(m => m['ChatID'].toString()) // ← преобразуем в строку для сравнения
+        .filter(Boolean)
+    );
+
+    console.log(`✅ Загружено ${MANAGERS_DATA.length} администраторов`);
+    console.log(`🔧 Доступ разрешён для:`, [...ADMIN_CHAT_IDS]);
+
   } catch (error) {
-    console.warn('⚠️ Не удалось загрузить Managers:', error.message);
-    // Оставляем предыдущие данные
+    console.error('❌ Ошибка загрузки Managers:', error.message);
+    if (error.response) {
+      console.error('HTTP статус:', error.response.status);
+      console.error('Ответ:', error.response.data);
+    }
   }
 }
 
@@ -364,3 +373,11 @@ process.once('SIGTERM', () => {
 
 // Начало
 startBot();
+// 3 sekunddan keyin egaga xabar
+setTimeout(() => {
+  bot.telegram.sendMessage(OWNER_CHAT_ID, 
+    `🟢 *Monitoring ishga tushdi*\n` +
+    `👥 Jami adminlar: ${ADMIN_CHAT_IDS.size} ta`, 
+    { parse_mode: 'Markdown' }
+  ).catch(console.error);
+}, 3000);
