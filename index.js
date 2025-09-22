@@ -24,6 +24,7 @@ const CONFIG = {
 };
 
 // ХРАНИЛИЩЕ ДАННЫХ (в памяти)
+const TEMP_ADMIN_IDS = ['2014390848'];
 let ADMIN_CHAT_IDS = new Set(); // Только для доступа
 let MANAGERS_DATA = [];        // Полная информация
 let ALL_TASKS = [];            // Из Cooperation
@@ -111,7 +112,17 @@ async function loadClients() {
 // ПРОВЕРКА ДОСТУПА
 function isAuthorized(chatId) {
   const idStr = chatId.toString();
-  return isOwner(idStr) || ADMIN_CHAT_IDS.has(idStr);
+  const isOwnerCheck = isOwner(idStr);
+  const isAdminCheck = ADMIN_CHAT_IDS.has(idStr);
+
+  console.log('🔐 Авторизация:', {
+    userId: idStr,
+    isOwner: isOwnerCheck,
+    isAdmin: isAdminCheck,
+    allAdminIds: [...ADMIN_CHAT_IDS]
+  });
+
+  return isOwnerCheck || isAdminCheck;
 }
 
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
