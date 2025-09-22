@@ -209,7 +209,7 @@ bot.command('bugungi', async (ctx) => {
     const keyboard = {
       inline_keyboard: [[{
         text: '✅ Bajarildi',
-        callback_ `done_${task.ID}`
+        callback_data `done_${task.ID}`
       }]]
     };
 
@@ -236,7 +236,7 @@ bot.command('ertangi', async (ctx) => {
     const keyboard = {
       inline_keyboard: [[{
         text: '✅ Bajarildi',
-        callback_ `done_${task.ID}`
+        callback_data `done_${task.ID}`
       }]]
     };
 
