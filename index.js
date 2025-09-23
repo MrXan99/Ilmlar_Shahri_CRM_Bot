@@ -148,31 +148,65 @@ function getActionEmoji(action) {
 
 function formatTime(dateString) {
   try {
-    return new Date(dateString).toLocaleTimeString('uz-UZ', {
+    // Если это число (как в Google Таблицах)
+    if (!isNaN(parseFloat(dateString))) {
+      const days = parseFloat(dateString);
+      const date = new Date(Date.UTC(1899, 11, 30)); // базовая дата Excel
+      date.setUTCDate(date.getUTCDate() + days);
+      const timeString = date.toLocaleTimeString('uz-UZ', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Tashkent'
+      });
+      return timeString;
+    }
+
+    // Если это строка вида ISO
+    const date = new Date(dateString);
+    if (isNaN(date)) return 'Noto‘g‘ri vaqt';
+
+    return date.toLocaleTimeString('uz-UZ', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Asia/Tashkent'
     });
-  } catch {
-    return 'Noma\'lum';
+  } catch (error) {
+    console.error('❌ Vaqtni formatlashda xato:', error);
+    return 'Vaqtni aniqlab bo‘lmadi';
   }
 }
 
 function getClientInfo(clientId) {
-  if (!clientId || !ALL_CLIENTS) return {
-    name: 'Mijoz aniqlanmadi',
-    phone: '+998 -- --- --'
-  };
+  if (!clientId || !ALL_CLIENTS || !Array.isArray(ALL_CLIENTS)) {
+    return { name: 'Mijoz aniqlanmadi', phone: '+998 -- --- --' };
+  }
 
-  // Поиск по нескольким возможным полям
-  const client = ALL_CLIENTS.find(c => 
-    c['Mijoz IDsi'] === clientId ||
-    c['ID'] === clientId ||
-    c['Ism Familiya'] === clientId
-  );
+  // Очищаем ID (на случай пробелов)
+  const cleanId = clientId.trim().toLowerCase();
+
+  // Ищем по разным возможным полям
+  const client = ALL_CLIENTS.find(c => {
+    const idFields = [
+      c['Mijoz IDsi'],
+      c['ID'],
+      c['Client ID'],
+      c['Ism Familiya'] // иногда используется как ID
+    ].map(val => val ? val.toString().trim().toLowerCase() : '');
+
+    return idFields.some(field => field === cleanId);
+  });
+
+  if (!client) {
+    console.log('❌ Клиент не найден:', clientId);
+    return { 
+      name: 'Mijoz aniqlanmadi', 
+      phone: '+998 -- --- --' 
+    };
+  }
 
   return {
-    name: client?.['Ism Familiya'] || `Mijoz #${clientId.slice(-6)}`,
-    phone: client?.['Telefon raqami'] || '+998 -- --- --'
+    name: client['Ism Familiya'] || client['Ismi'] || 'Ismi ko\'rsatilmagan',
+    phone: client['Telefon raqami'] || client['Telefon'] || '+998 -- --- --'
   };
 }
 
