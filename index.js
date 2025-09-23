@@ -379,6 +379,19 @@ async function sendTodayTasksReport() {
   }
 }
 
+  // Отправка всем админам
+function sendMessageToAllAdmins(text) {
+  const chatIds = [OWNER_CHAT_ID, ...ADMIN_CHAT_IDS];
+
+  chatIds.forEach(async (chatId) => {
+    try {
+      await bot.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+    } catch (error) {
+      console.error(`❌ Xabar jo'natishda xato ${chatId}:`, error.message);
+    }
+  });
+}
+  
 // Отправка завтрашних задач
 async function sendTomorrowTasksReport() {
   try {
@@ -411,20 +424,7 @@ async function sendTomorrowTasksReport() {
   }
 }
 
-// Отправка всем админам
-function sendMessageToAllAdmins(text) {
-  const chatIds = [OWNER_CHAT_ID, ...ADMIN_CHAT_IDS];
-
-  chatIds.forEach(async (chatId) => {
-    try {
-      await bot.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
-    } catch (error) {
-      console.error(`❌ Xabar jo'natishda xato ${chatId}:`, error.message);
-    }
-  });
-}
-  
-  // Уведомления за 1 час
+// Уведомления за 1 час
   setInterval(async () => {
     await loadTasks();
     const now = new Date();
@@ -495,25 +495,11 @@ startBot();
 // После bot.launch()
 startScheduledJobs();     // ← уже была (обновление данных)
 startDailyReports();      // ← новая (рассылка)
-async function startBot() {
-  try {
-    console.log('🚀 Ilmlar Shahri CRM Bot ishga tushmoqda...');
-    await loadManagers();
-    await loadTasks();
-    await loadClients();
-
-    await bot.launch();
-    console.log('✅ Bot ishga tushdi!');
-
-    // Автоматизация
-    startScheduledJobs();  // ← уже есть
-    startDailyReports();   // ← Добавь эту строку!
-  } catch (error) {
-    console.error('❌ Kritik xato:', error);
-    process.exit(1);
-  }
 }
-
+catch (error) {
+    console.error('❌ Ошибка:', error);
+    process.exit(1);
+}
 // 3 sekunddan keyin egaga xabar
 setTimeout(() => {
   bot.telegram.sendMessage(OWNER_CHAT_ID, 
