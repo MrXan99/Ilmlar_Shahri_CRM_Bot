@@ -317,9 +317,12 @@ bot.action(/done_.+/, async (ctx) => {
   }
 });
 
+// =============================
 // АВТОМАТИЧЕСКИЕ ЗАДАЧИ
+// =============================
+
+// Обновление данных каждые 5 минут
 function startScheduledJobs() {
-  // Каждые 5 минут — обновляем данные
   setInterval(async () => {
     await loadManagers();
     await loadTasks();
@@ -327,30 +330,52 @@ function startScheduledJobs() {
     console.log('🔄 Maʼlumotlar yangilandi');
   }, 5 * 60 * 1000);
 
-  // === ЕЖЕДНЕВНЫЕ ОТЧЁТЫ: 8:00 и 20:00 ===
+  // Уведомления за 1 час
+  setInterval(async () => {
+    await loadTasks();
+    const now = new Date();
+    const oneHour = new Date(now.getTime() + 60 * 60 * 1000);
+
+    for (const task of ALL_TASKS) {
+      if (!task['Keyingi harakat sanasi'] || task['Bajarildimi?']) continue;
+
+      const taskTime = new Date(task['Keyingi harakat sanasi']);
+      if (taskTime > now && taskTime <= oneHour) {
+        const message = `⏰ *Eslatma!* ${task['Keyingi harakat']} — 1 soat qoldi`;
+
+        for (const id of ADMIN_CHAT_IDS) {
+          try {
+            await bot.telegram.sendMessage(id, message, { parse_mode: 'Markdown' });
+          } catch (e) {
+            console.error(`❌ Xabar jo‘natishda xato ${id}:`, e.message);
+          }
+        }
+      }
+    }
+  }, 5 * 60 * 1000);
+}
+
+// Ежедневные отчёты: 8:00 и 20:00
 function startDailyReports() {
   setInterval(() => {
     const now = new Date();
     const hours = now.getUTCHours() + 5; // UTC+5 (Tashkent)
     const currentHour = hours % 24;
 
-    // 8:00 — Сегодняшние задачи
     if (currentHour === 8 && now.getMinutes() === 0) {
       sendTodayTasksReport();
     }
 
-    // 20:00 — Завтрашние задачи
     if (currentHour === 20 && now.getMinutes() === 0) {
       sendTomorrowTasksReport();
     }
-  }, 60 * 1000); // Проверяем каждую минуту
+  }, 60 * 1000); // Каждую минуту проверяем время
 }
 
 // Отправка сегодняшних задач
 async function sendTodayTasksReport() {
   try {
     await loadTasks();
-
     const today = new Date();
     const tasks = filterByDate(ALL_TASKS, today).filter(t => !t['Bajarildimi?']);
 
@@ -360,8 +385,7 @@ async function sendTodayTasksReport() {
     }
 
     let message = `📅 *BUGUNGI VAZIFALAR (${tasks.length} ta)*\n\n`;
-    
-    tasks.forEach((task, i) => {
+    tasks.forEach((task) => {
       const { name, phone } = getClientInfo(task['Mijoz IDsi']);
       const time = formatTime(task['Keyingi harakat sanasi']);
       const emoji = getActionEmoji(task['Keyingi harakat']);
@@ -379,24 +403,10 @@ async function sendTodayTasksReport() {
   }
 }
 
-  // Отправка всем админам
-function sendMessageToAllAdmins(text) {
-  const chatIds = [OWNER_CHAT_ID, ...ADMIN_CHAT_IDS];
-
-  chatIds.forEach(async (chatId) => {
-    try {
-      await bot.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
-    } catch (error) {
-      console.error(`❌ Xabar jo'natishda xato ${chatId}:`, error.message);
-    }
-  });
-}
-  
 // Отправка завтрашних задач
 async function sendTomorrowTasksReport() {
   try {
     await loadTasks();
-
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const tasks = filterByDate(ALL_TASKS, tomorrow).filter(t => !t['Bajarildimi?']);
 
@@ -406,8 +416,7 @@ async function sendTomorrowTasksReport() {
     }
 
     let message = `📆 *ERTANGI VAZIFALAR (${tasks.length} ta)*\n\n`;
-    
-    tasks.forEach((task, i) => {
+    tasks.forEach((task) => {
       const { name, phone } = getClientInfo(task['Mijoz IDsi']);
       const time = formatTime(task['Keyingi harakat sanasi']);
       const emoji = getActionEmoji(task['Keyingi harakat']);
@@ -424,33 +433,22 @@ async function sendTomorrowTasksReport() {
   }
 }
 
-// Уведомления за 1 час
-  setInterval(async () => {
-    await loadTasks();
-    const now = new Date();
-    const oneHour = new Date(now.getTime() + 60 * 60 * 1000);
+// Отправка всем админам
+function sendMessageToAllAdmins(text) {
+  const chatIds = [OWNER_CHAT_ID, ...ADMIN_CHAT_IDS];
 
-    for (const task of ALL_TASKS) {
-      if (!task['Keyingi harakat sanasi'] || task['Bajarildimi?']) continue;
-
-      const taskTime = new Date(task['Keyingi harakat sanasi']);
-      if (taskTime > now && taskTime <= oneHour) {
-        const message = `⏰ *Eslatma!* ${task['Keyingi harakat']} — 1 soat qoldi`;
-
-        // Отправляем всем админам
-        for (const id of ADMIN_CHAT_IDS) {
-          try {
-            await bot.telegram.sendMessage(id, message, { parse_mode: 'Markdown' });
-          } catch (e) {
-            console.error(`❌ Xabar jo‘natishda xato ${id}:`, e.message);
-          }
-        }
-      }
+  chatIds.forEach(async (chatId) => {
+    try {
+      await bot.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+    } catch (error) {
+      console.error(`❌ Xabar jo'natishda xato ${chatId}:`, error.message);
     }
-  }, 5 * 60 * 1000);
+  });
 }
 
+// =============================
 // ЗАПУСК БОТА
+// =============================
 async function startBot() {
   try {
     console.log('🚀 Ilmlar Shahri CRM Bot ishga tushmoqda...');
@@ -460,13 +458,14 @@ async function startBot() {
     await loadTasks();
     await loadClients();
 
-    // Запуск
+    // Запуск бота
     await bot.launch();
     console.log('✅ Bot ishga tushdi!');
 
     // Автоматизация
     startScheduledJobs();
-    
+    startDailyReports();
+
     // Уведомление владельцу
     setTimeout(() => {
       bot.telegram.sendMessage(OWNER_CHAT_ID, '🟢 *Bot ishga tushdi! Hamma funksiyalar faol.*', {
@@ -492,19 +491,3 @@ process.once('SIGTERM', () => {
 
 // Начало
 startBot();
-// После bot.launch()
-startScheduledJobs();     // ← уже была (обновление данных)
-startDailyReports();      // ← новая (рассылка)
-}
-catch (error) {
-    console.error('❌ Ошибка:', error);
-    process.exit(1);
-}
-// 3 sekunddan keyin egaga xabar
-setTimeout(() => {
-  bot.telegram.sendMessage(OWNER_CHAT_ID, 
-    `🟢 *Monitoring ishga tushdi*\n` +
-    `👥 Jami adminlar: ${ADMIN_CHAT_IDS.size} ta`, 
-    { parse_mode: 'Markdown' }
-  ).catch(console.error);
-}, 3000);
