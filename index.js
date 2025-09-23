@@ -158,7 +158,18 @@ function formatTime(dateString) {
 }
 
 function getClientInfo(clientId) {
-  const client = ALL_CLIENTS.find(c => c['Mijoz IDsi'] === clientId);
+  if (!clientId || !ALL_CLIENTS) return {
+    name: 'Mijoz aniqlanmadi',
+    phone: '+998 -- --- --'
+  };
+
+  // Поиск по нескольким возможным полям
+  const client = ALL_CLIENTS.find(c => 
+    c['Mijoz IDsi'] === clientId ||
+    c['ID'] === clientId ||
+    c['Ism Familiya'] === clientId
+  );
+
   return {
     name: client?.['Ism Familiya'] || `Mijoz #${clientId.slice(-6)}`,
     phone: client?.['Telefon raqami'] || '+998 -- --- --'
@@ -316,6 +327,103 @@ function startScheduledJobs() {
     console.log('🔄 Maʼlumotlar yangilandi');
   }, 5 * 60 * 1000);
 
+  // === ЕЖЕДНЕВНЫЕ ОТЧЁТЫ: 8:00 и 20:00 ===
+function startDailyReports() {
+  setInterval(() => {
+    const now = new Date();
+    const hours = now.getUTCHours() + 5; // UTC+5 (Tashkent)
+    const currentHour = hours % 24;
+
+    // 8:00 — Сегодняшние задачи
+    if (currentHour === 8 && now.getMinutes() === 0) {
+      sendTodayTasksReport();
+    }
+
+    // 20:00 — Завтрашние задачи
+    if (currentHour === 20 && now.getMinutes() === 0) {
+      sendTomorrowTasksReport();
+    }
+  }, 60 * 1000); // Проверяем каждую минуту
+}
+
+// Отправка сегодняшних задач
+async function sendTodayTasksReport() {
+  try {
+    await loadTasks();
+
+    const today = new Date();
+    const tasks = filterByDate(ALL_TASKS, today).filter(t => !t['Bajarildimi?']);
+
+    if (tasks.length === 0) {
+      sendMessageToAllAdmins('🌅 *Bugun hech qanday vazifa rejalashtirilmagan.*');
+      return;
+    }
+
+    let message = `📅 *BUGUNGI VAZIFALAR (${tasks.length} ta)*\n\n`;
+    
+    tasks.forEach((task, i) => {
+      const { name, phone } = getClientInfo(task['Mijoz IDsi']);
+      const time = formatTime(task['Keyingi harakat sanasi']);
+      const emoji = getActionEmoji(task['Keyingi harakat']);
+      
+      message += `${emoji} *${task['Keyingi harakat']}*\n`;
+      message += `👤 ${name}\n`;
+      message += `📞 ${phone}\n`;
+      message += `🕒 ${time}\n`;
+      message += `──────────────────\n`;
+    });
+
+    sendMessageToAllAdmins(message);
+  } catch (error) {
+    console.error('❌ Xatolik bugungi hisobotda:', error.message);
+  }
+}
+
+// Отправка завтрашних задач
+async function sendTomorrowTasksReport() {
+  try {
+    await loadTasks();
+
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const tasks = filterByDate(ALL_TASKS, tomorrow).filter(t => !t['Bajarildimi?']);
+
+    if (tasks.length === 0) {
+      sendMessageToAllAdmins('🌙 *Ertangi kun uchun vazifalar yo‘q.*');
+      return;
+    }
+
+    let message = `📆 *ERTANGI VAZIFALAR (${tasks.length} ta)*\n\n`;
+    
+    tasks.forEach((task, i) => {
+      const { name, phone } = getClientInfo(task['Mijoz IDsi']);
+      const time = formatTime(task['Keyingi harakat sanasi']);
+      const emoji = getActionEmoji(task['Keyingi harakat']);
+      
+      message += `${emoji} *${task['Keyingi harakat']}*\n`;
+      message += `👤 ${name}\n`;
+      message += `📞 ${phone}\n`;
+      message += `──────────────────\n`;
+    });
+
+    sendMessageToAllAdmins(message);
+  } catch (error) {
+    console.error('❌ Xatolik ertangi hisobotda:', error.message);
+  }
+}
+
+// Отправка всем админам
+function sendMessageToAllAdmins(text) {
+  const chatIds = [OWNER_CHAT_ID, ...ADMIN_CHAT_IDS];
+
+  chatIds.forEach(async (chatId) => {
+    try {
+      await bot.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+    } catch (error) {
+      console.error(`❌ Xabar jo'natishda xato ${chatId}:`, error.message);
+    }
+  });
+}
+  
   // Уведомления за 1 час
   setInterval(async () => {
     await loadTasks();
@@ -358,7 +466,7 @@ async function startBot() {
 
     // Автоматизация
     startScheduledJobs();
-
+    
     // Уведомление владельцу
     setTimeout(() => {
       bot.telegram.sendMessage(OWNER_CHAT_ID, '🟢 *Bot ishga tushdi! Hamma funksiyalar faol.*', {
@@ -384,6 +492,28 @@ process.once('SIGTERM', () => {
 
 // Начало
 startBot();
+// После bot.launch()
+startScheduledJobs();     // ← уже была (обновление данных)
+startDailyReports();      // ← новая (рассылка)
+async function startBot() {
+  try {
+    console.log('🚀 Ilmlar Shahri CRM Bot ishga tushmoqda...');
+    await loadManagers();
+    await loadTasks();
+    await loadClients();
+
+    await bot.launch();
+    console.log('✅ Bot ishga tushdi!');
+
+    // Автоматизация
+    startScheduledJobs();  // ← уже есть
+    startDailyReports();   // ← Добавь эту строку!
+  } catch (error) {
+    console.error('❌ Kritik xato:', error);
+    process.exit(1);
+  }
+}
+
 // 3 sekunddan keyin egaga xabar
 setTimeout(() => {
   bot.telegram.sendMessage(OWNER_CHAT_ID, 
