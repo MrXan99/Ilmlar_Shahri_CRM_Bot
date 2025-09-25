@@ -116,6 +116,7 @@ function isAuthorized(chatId) {
 function filterByDate(tasks, targetDate) {
   const target = new Date(targetDate);
   target.setHours(0, 0, 0, 0);
+
   return tasks.filter(task => {
     const taskDate = new Date(task['Keyingi harakat sanasi']);
     taskDate.setHours(0, 0, 0, 0);
