@@ -37,54 +37,18 @@ function isOwner(chatId) {
   return chatId.toString() === OWNER_CHAT_ID;
 }
 
-// АВТОРИЗАЦИЯ: Чтение Managers из Google Таблицы
-async function loadManagers() {
-  try {
-    const url = `${CONFIG.GOOGLE_SHEETS_API}?sheet=Managers`;
-    console.log('🔍 Запрос к Managers:', url);
+// === ЗАГРУЗКА С GitHub (обход блокировок) ===
 
-    const response = await axios.get(url, {
-      timeout: 10000,
-      headers: { 'User-Agent': 'Node.js Bot' }
-    });
-
-    if (!response.data || !Array.isArray(response.data)) {
-      console.error('❌ Managers: данные не массив', response.data);
-      return;
-    }
-
-    MANAGERS_DATA = response.data.filter(m => m['ChatID']);
-    
-    ADMIN_CHAT_IDS = new Set(
-      MANAGERS_DATA
-        .filter(m => ['admin', 'manager'].includes((m['Lavozimi'] || '').toLowerCase()))
-        .map(m => m['ChatID'].toString()) // ← преобразуем в строку для сравнения
-        .filter(Boolean)
-    );
-
-    console.log(`✅ Загружено ${MANAGERS_DATA.length} администраторов`);
-    console.log(`🔧 Доступ разрешён для:`, [...ADMIN_CHAT_IDS]);
-
-  } catch (error) {
-    console.error('❌ Ошибка загрузки Managers:', error.message);
-    if (error.response) {
-      console.error('HTTP статус:', error.response.status);
-      console.error('Ответ:', error.response.data);
-    }
-  }
-}
-
-// ЗАГРУЗКА ЗАДАЧ И КЛИЕНТОВ
 async function loadTasks() {
   try {
-    const url = `${CONFIG.GOOGLE_SHEETS_API}?sheet=Cooperation`;
+    const url = 'https://raw.githubusercontent.com/MrXan99/Ilmlar_Shahri_CRM_Bot/main/data/tasks.json';
     const response = await axios.get(url, {
-      timeout: 15000,
-      headers: { 'User-Agent': 'Node.js Bot' }
+      timeout: 10000,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
 
     if (Array.isArray(response.data)) {
-      ALL_TASKS = response.data.filter(t => t['Mijoz IDsi'] && t['Keyingi harakat sanasi']);
+      ALL_TASKS = response.data.filter(t => t['Mijoz IDsi']);
       console.log(`✅ Загружено ${ALL_TASKS.length} задач`);
     }
   } catch (error) {
@@ -94,10 +58,10 @@ async function loadTasks() {
 
 async function loadClients() {
   try {
-    const url = `${CONFIG.GOOGLE_SHEETS_API}?sheet=Leads`;
+    const url = 'https://raw.githubusercontent.com/MrXan99/Ilmlar_Shahri_CRM_Bot/main/data/clients.json';
     const response = await axios.get(url, {
-      timeout: 15000,
-      headers: { 'User-Agent': 'Node.js Bot' }
+      timeout: 10000,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
 
     if (Array.isArray(response.data)) {
@@ -106,6 +70,29 @@ async function loadClients() {
     }
   } catch (error) {
     console.error('❌ Ошибка загрузки клиентов:', error.message);
+  }
+}
+
+async function loadManagers() {
+  try {
+    const url = 'https://raw.githubusercontent.com/MrXan99/Ilmlar_Shahri_CRM_Bot/main/data/managers.json';
+    const response = await axios.get(url, {
+      timeout: 10000,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+
+    if (Array.isArray(response.data)) {
+      MANAGERS_DATA = response.data;
+      ADMIN_CHAT_IDS = new Set(
+        MANAGERS_DATA
+          .filter(m => ['admin', 'manager'].includes((m['Lavozimi'] || '').toLowerCase()))
+          .map(m => m['ChatID'].toString())
+          .filter(Boolean)
+      );
+      console.log(`✅ Загружено ${MANAGERS_DATA.length} администраторов`);
+    }
+  } catch (error) {
+    console.error('❌ Ошибка загрузки менеджеров:', error.message);
   }
 }
 
