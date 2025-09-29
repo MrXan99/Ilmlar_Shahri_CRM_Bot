@@ -265,7 +265,7 @@ bot.command('bugungi', async (ctx) => {
         callback_data: `done_${task.ID}`
       }]]
     };
-
+    console.log('📌 Передаю в кнопку ID:', task.ID);
     ctx.replyWithMarkdown(message, { reply_markup: keyboard });
   }
 });
