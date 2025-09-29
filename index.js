@@ -315,8 +315,8 @@ bot.command('monitoring', async (ctx) => {
 });
 
 // ОБРАБОТЧИК КНОПКИ "✅ Bajarildi"
-bot.action(/done_.+/, async (ctx) => {
-  const taskId = ctx.match[0].split('_')[1];
+bot.action(/done_(.+)/, async (ctx) => {
+  const taskId = ctx.match[1];
   const chatId = ctx.chat.id.toString();
 
   if (!isAuthorized(chatId)) {
@@ -324,18 +324,19 @@ bot.action(/done_.+/, async (ctx) => {
   }
 
   try {
-    // Отправляем запрос в Apps Script
-    await axios.get(`${CONFIG.GOOGLE_SHEETS_API}?action=complete&taskId=${taskId}`, {
-      timeout: 10000
-    });
+    const url = `${CONFIG.GOOGLE_SHEETS_API}?action=complete&taskId=${taskId}`;
+    const response = await axios.get(url, { timeout: 10000 });
 
-    await ctx.answerCbQuery('✅ Vazifa bajarildi!');
-    await ctx.reply('🎉 Ajoyib! Vazifa muvaffaqiyatli belgilandi.');
-
-    console.log(`✅ Vazifa ${taskId} belgilandi foydalanuvchi: ${chatId}`);
+    if (response.data.success) {
+      await ctx.answerCbQuery('✅ Vazifa bajarildi!');
+      await ctx.reply('🎉 Ajoyib! Vazifa muvaffaqiyatli belgilandi.');
+      console.log(`✅ Задача ${taskId} обновлена`);
+    } else {
+      await ctx.answerCbQuery('❌ Xatolik: ' + response.data.error);
+    }
   } catch (error) {
-    console.error(`❌ Xatolik belgilashda ${taskId}:`, error.message);
-    await ctx.answerCbQuery('❌ Xatolik yuz berdi');
+    console.error(`❌ Ошибка при отметке ${taskId}:`, error.message);
+    await ctx.answerCbQuery('❌ Tarmoq xatosi');
   }
 });
 
