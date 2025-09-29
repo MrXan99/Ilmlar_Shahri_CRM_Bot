@@ -314,9 +314,8 @@ bot.command('monitoring', async (ctx) => {
   );
 });
 
-// ОБРАБОТЧИК КНОПКИ "✅ Bajarildi"
 bot.action(/done_(.+)/, async (ctx) => {
-  const taskId = ctx.match[1];
+  const taskId = ctx.match[1]; // ← например, "0db80b43"
   const chatId = ctx.chat.id.toString();
 
   if (!isAuthorized(chatId)) {
@@ -324,18 +323,26 @@ bot.action(/done_(.+)/, async (ctx) => {
   }
 
   try {
+    // 🚀 Отправляем запрос на Apps Script
     const url = `${CONFIG.GOOGLE_SHEETS_API}?action=complete&taskId=${taskId}`;
+    
+    console.log('📤 Отправка в Apps Script:', url);
+
     const response = await axios.get(url, { timeout: 10000 });
 
     if (response.data.success) {
       await ctx.answerCbQuery('✅ Vazifa bajarildi!');
       await ctx.reply('🎉 Ajoyib! Vazifa muvaffaqiyatli belgilandi.');
-      console.log(`✅ Задача ${taskId} обновлена`);
+      
+      // Обновим задачи
+      await loadTasks();
     } else {
-      await ctx.answerCbQuery('❌ Xatolik: ' + response.data.error);
+      const error = response.data.error || 'Noma\'lum xato';
+      console.error('❌ Server xatosi:', error);
+      await ctx.answerCbQuery(`❌ Xato: ${error}`);
     }
   } catch (error) {
-    console.error(`❌ Ошибка при отметке ${taskId}:`, error.message);
+    console.error(`❌ Tarmoq xatosi (${taskId}):`, error.message);
     await ctx.answerCbQuery('❌ Tarmoq xatosi');
   }
 });
