@@ -454,5 +454,41 @@
     "Mas'ul xodim": "Kamronbek Baxtiyorjonov",
     "Status": "boshlangich",
     "Izoh": "dushanbi seshanbi va charshanbi kuniga kerak"
+  },
+  {
+    "Mijoz IDsi": "b795d19f",
+    "Ism Familiya": "Alijonov Dovud",
+    "Telefon raqami": "90-525-77-70",
+    "Yo'nalish": "Arab tili",
+    "Yosh": 18,
+    "Qabul qilingan sana": "2025-09-26T12:01:45.000Z",
+    "Manbaa": "Boshqa",
+    "Mas'ul xodim": "Kamronbek Baxtiyorjonov",
+    "Status": "1 yil oqigan",
+    "Izoh": "sozlashuvga sorayapdi"
+  },
+  {
+    "Mijoz IDsi": "85cf5129",
+    "Ism Familiya": "Luqmonjonova Dilorom",
+    "Telefon raqami": "90-217-39-11",
+    "Yo'nalish": "Ingiliz tili",
+    "Yosh": 16,
+    "Qabul qilingan sana": "2025-09-26T12:03:22.000Z",
+    "Manbaa": "Boshqa",
+    "Mas'ul xodim": "Kamronbek Baxtiyorjonov",
+    "Status": "noldan",
+    "Izoh": "13:30 da bolishi kerak ekan"
+  },
+  {
+    "Mijoz IDsi": "fe0ff2ae",
+    "Ism Familiya": "Test Hayotillo",
+    "Telefon raqami": 999123465,
+    "Yo'nalish": "Ingiliz tili",
+    "Yosh": 13,
+    "Qabul qilingan sana": "2025-09-29T04:09:09.000Z",
+    "Manbaa": "Tavsiya",
+    "Mas'ul xodim": "Kamronbek Baxtiyorjonov",
+    "Status": "",
+    "Izoh": ""
   }
 ]
