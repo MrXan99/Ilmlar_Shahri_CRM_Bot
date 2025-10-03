@@ -475,15 +475,12 @@ function sendMessageToAllAdmins(text) {
     }
   });
 }
-// === ПРОСТОЙ ВЕБ-СЕРВЕР ДЛЯ UPTIMEROBOT ===
+// === Минимальный веб-сервер для получения Public URL ===
 const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.status(200).send(`
-    <h1>Ilmlar Shahri CRM Bot</h1>
-    <p>🟢 Бот работает. Owner: ${OWNER_CHAT_ID}</p>
-  `);
+  res.status(200).send('🟢 Bot is working!');
 });
 
 const PORT = process.env.PORT || 3000;
