@@ -475,7 +475,21 @@ function sendMessageToAllAdmins(text) {
     }
   });
 }
+// === ПРОСТОЙ ВЕБ-СЕРВЕР ДЛЯ UPTIMEROBOT ===
+const express = require('express');
+const app = express();
 
+app.get('/', (req, res) => {
+  res.status(200).send(`
+    <h1>Ilmlar Shahri CRM Bot</h1>
+    <p>🟢 Бот работает. Owner: ${OWNER_CHAT_ID}</p>
+  `);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🌐 Веб-сервер запущен на порту ${PORT}`);
+});
 // =============================
 // ЗАПУСК БОТА
 // =============================
